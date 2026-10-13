@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import "katex/dist/katex.min.css";
 import {
@@ -36,9 +36,10 @@ function Mark() {
 function Header() {
   const [open, setOpen] = useState(false);
   const links = [
-    ["Overview", "#taxonomy"],
-    ["Approach", "#method"],
-    ["Examples", "#components"],
+    ["Overview", "#overview"],
+    ["Extraction", "#extraction"],
+    ["Annotation", "#annotation"],
+    ["Offline RL", "#rl"],
     ["Results", "#results"],
   ];
 
@@ -135,7 +136,7 @@ function Blueprint() {
 function Hero() {
   return (
     <main id="top">
-      <section className="hero">
+      <section className="hero" id="overview">
         <div className="hero-glow hero-glow--one" />
         <div className="hero-glow hero-glow--two" />
         <div className="hero-inner">
@@ -177,213 +178,24 @@ function SectionIntro({ label, title, text }: { label: string; title: string; te
   );
 }
 
-function TaxonomySection() {
-  return (
-    <section className="taxonomy-opening" id="taxonomy" aria-label="Positioning TOPAS in the literature">
-      <div className="section-shell section-shell--wide">
-        <div className="taxonomy-opening__intro" data-reveal><span className="mini-label">Positioning the method</span><h2>Where does a conversational strategy come from?</h2><p>Existing approaches differ in how they represent the decisions that guide a conversation. The taxonomy places TOPAS alongside implicit and explicit planning methods before we examine its design.</p></div>
-        <div className="taxonomy-story">
-          <PaperFigure
-            number={4}
-            title="Four ways to represent conversational strategy."
-            caption="Prompting and model fine-tuning leave strategy implicit; explicit planners usually rely on handcrafted spaces or learned subgoals. TOPAS derives its planning structure from textbooks."
-            className="paper-figure--taxonomy"
-          >
-            <img src="./figures/fig-taxonomy.svg" alt="Taxonomy of implicit, handcrafted, learned, and textbook-derived conversational strategies" loading="lazy" />
-          </PaperFigure>
-          <div className="taxonomy-story__copy"><span className="mini-label">The design choice</span><h3>Ground the planner in domain knowledge</h3><p>Prompting and direct model training leave strategy inside the response model. Other explicit planners separate decisions from text generation but need a human-designed action space or learn free-form subgoals. TOPAS extracts options, actions, rewards, and a memory ontology from instructional material, then trains a small planner over that shared structure.</p></div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 const pageChapters = [
-  { number: "01", title: "The landscape", description: "Position TOPAS among other planning approaches.", href: "#taxonomy", detail: "Taxonomy" },
-  { number: "02", title: "The method", description: "A compact guide to extraction, annotation, and learning.", href: "#method", detail: "Three stages" },
-  { number: "03", title: "The examples", description: "Browse components, a real annotated transcript, and simulated sessions.", href: "#components", detail: "Components and sessions" },
-  { number: "04", title: "The results", description: "Compare the paper's policy and extraction results.", href: "#results", detail: "Interactive results" },
+  { number: "01", title: "Overview", description: "See the complete system at a glance.", href: "#overview", detail: "System" },
+  { number: "02", title: "Extraction", description: "Build a domain prior from textbooks.", href: "#extraction", detail: "Phase one" },
+  { number: "03", title: "Annotation", description: "Turn dialogues into training trajectories.", href: "#annotation", detail: "Phase two" },
+  { number: "04", title: "Offline RL", description: "Learn the hierarchical planner.", href: "#rl", detail: "Phase three" },
+  { number: "05", title: "Results", description: "Explore the reported findings.", href: "#results", detail: "Evaluation" },
 ];
 
 function PageIndex() {
   return (
     <nav className="page-index section-shell section-shell--wide" id="contents" aria-label="On this page">
-      <div className="page-index__intro"><span className="mini-label">On this page</span><h2>Explore the paper.</h2><p>Jump to the method, component browser, sessions, or results.</p></div>
+      <div className="page-index__intro"><span className="mini-label">On this page</span><h2>Explore the paper.</h2><p>Follow the overview, three phases, and results.</p></div>
       <div className="page-index__links">
         {pageChapters.map((chapter) => <a href={chapter.href} key={chapter.href}>
           <span>{chapter.number} · {chapter.detail}</span><strong>{chapter.title}</strong><p>{chapter.description}</p><ArrowRight size={16} aria-hidden="true" />
         </a>)}
       </div>
     </nav>
-  );
-}
-
-type PaperFigureData = {
-  number: number | string;
-  title: string;
-  caption: string;
-  assets: Array<{ src: string; alt: string }>;
-  layout?: "legend" | "split" | "quad";
-};
-
-const FigureLightboxContext = createContext<(figure: PaperFigureData) => void>(() => {});
-const figureLabel = (number: number | string) => typeof number === "number" ? `Figure ${number}` : number;
-
-function PaperFigure({
-  number,
-  title,
-  caption,
-  className = "",
-  children,
-}: {
-  number: number | string;
-  title: string;
-  caption: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const openFigure = useContext(FigureLightboxContext);
-  const figure = paperFigures.find((item) => item.number === number);
-  return (
-    <figure className={`paper-figure ${className}`} data-reveal>
-      <button type="button" className="paper-figure__canvas paper-figure__zoom" onClick={() => figure && openFigure(figure)} aria-label={`Open ${figureLabel(number)}: ${title}`}>
-        {children}
-      </button>
-      <figcaption>
-        <span>{figureLabel(number)}</span>
-        <div><strong>{title}</strong><p>{caption}</p></div>
-      </figcaption>
-    </figure>
-  );
-}
-
-function TeaserSection() {
-  return (
-    <section className="teaser-section" aria-label="Paper teaser figure">
-      <div className="section-shell section-shell--wide">
-        <PaperFigure
-          number={1}
-          title="Long-horizon performance, coverage, and efficiency."
-          caption="CBT soft success rate by session length, expert-policy similarity, and training and parameter efficiency."
-          className="paper-figure--teaser"
-        >
-          <div className="teaser-figure-grid">
-            <img className="teaser-legend" src="./figures/fig1-legend.svg" alt="Legend for TOPAS and baselines" />
-            <img src="./figures/fig1-ssr.svg" alt="Soft success rate across planning horizons" />
-            <img src="./figures/fig1-coverage.svg" alt="Expert-policy similarity" />
-            <img src="./figures/fig1-efficiency.svg" alt="Training cost and trainable parameters" />
-          </div>
-        </PaperFigure>
-        <div className="teaser-copy" data-reveal>
-          <span className="mini-label">At a glance</span>
-          <h2>Planning further, with less trainable machinery.</h2>
-          <p>Longer CBT sessions test whether a policy sustains its strategy. The figure compares soft success rate across session lengths, similarity to high-return expert trajectories, and the cost of adapting each method.</p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-const paperFigures: PaperFigureData[] = [
-  {
-    number: 1,
-    title: "Performance, coverage, and efficiency",
-    caption: "TOPAS improves long-horizon performance while using a small trainable policy and maintaining broad action coverage.",
-    layout: "legend",
-    assets: [
-      { src: "./figures/fig1-legend.svg", alt: "Legend for TOPAS and planning baselines" },
-      { src: "./figures/fig1-ssr.svg", alt: "Success rate across interaction horizons" },
-      { src: "./figures/fig1-coverage.svg", alt: "Action coverage comparison" },
-      { src: "./figures/fig1-efficiency.svg", alt: "Training efficiency comparison" },
-    ],
-  },
-  {
-    number: 3,
-    title: "TOPAS overview",
-    caption: "Textbooks and unlabeled dialogues flow through structure extraction, latent annotation, and policy training.",
-    assets: [{ src: "./figures/fig3-page.svg", alt: "Overview of the complete TOPAS system" }],
-  },
-  {
-    number: 4,
-    title: "Where TOPAS sits among proactive agents",
-    caption: "Prompting and model fine-tuning keep strategy implicit; existing explicit planners use hand-designed action spaces or learned free-form subgoals. TOPAS extracts a hierarchical decision space and memory ontology from textbooks.",
-    assets: [{ src: "./figures/fig-taxonomy.svg", alt: "Taxonomy comparing implicit, handcrafted, learned, and textbook-derived strategies" }],
-  },
-  {
-    number: 5,
-    title: "Structure extraction",
-    caption: "Single-book and multi-book pipelines consolidate evidence into reusable planner, memory, and simulator components.",
-    assets: [{ src: "./figures/fig4-page.svg", alt: "TOPAS structure extraction pipelines" }],
-  },
-  {
-    number: 6,
-    title: "Self-annotation and refinement",
-    caption: "The extracted prior guides option segmentation, primitive action mapping, state and reward assignment, then refinement.",
-    assets: [{ src: "./figures/fig5-page.svg", alt: "TOPAS self-annotation and refinement pipeline" }],
-  },
-  {
-    number: 9,
-    title: "Planner-state construction",
-    caption: "Planning-layer activations become latent state representations, paired with supervised conversation-state prediction.",
-    assets: [{ src: "./figures/fig8-planner-state.svg", alt: "Visualization of TOPAS planner-state construction" }],
-  },
-  {
-    number: "Training",
-    title: "Offline policy training",
-    caption: "A frozen dialogue model and state probes supply the planner state; retrieved graph memory joins it before the action, option, and termination policies are trained from annotated dialogues.",
-    assets: [{ src: "./figures/fig-policy-training.svg", alt: "Offline training pipeline showing frozen dialogue layers and probes, graph retrieval, three planner policies, and the three training stages" }],
-  },
-];
-
-function FigureVisual({ figure, expanded = false }: { figure: PaperFigureData; expanded?: boolean }) {
-  return (
-    <div className={`figure-visual figure-visual--${figure.layout ?? "single"} figure-visual--figure-${figure.number} ${expanded ? "figure-visual--expanded" : ""}`}>
-      {figure.assets.map((asset) => <img key={asset.src} src={asset.src} alt={asset.alt} loading="lazy" />)}
-    </div>
-  );
-}
-
-function FigureLightboxProvider({ children }: { children: React.ReactNode }) {
-  const [selected, setSelected] = useState<PaperFigureData | null>(null);
-  const closeButton = useRef<HTMLButtonElement>(null);
-  const returnFocus = useRef<HTMLElement | null>(null);
-
-  function openFigure(figure: PaperFigureData) {
-    returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    setSelected(figure);
-  }
-
-  useEffect(() => {
-    if (!selected) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeButton.current?.focus();
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelected(null);
-      if (event.key === "Tab") {
-        event.preventDefault();
-        closeButton.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", close);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", close);
-      returnFocus.current?.focus();
-    };
-  }, [selected]);
-
-  return (
-    <FigureLightboxContext.Provider value={openFigure}>
-      {children}
-      {selected && <div className="figure-lightbox" role="dialog" aria-modal="true" aria-label={`${figureLabel(selected.number)}: ${selected.title}`} onClick={() => setSelected(null)}>
-        <div className="figure-lightbox__panel" onClick={(event) => event.stopPropagation()}>
-          <div className="figure-lightbox__head"><div><span>{figureLabel(selected.number)}</span><strong>{selected.title}</strong></div><button ref={closeButton} type="button" aria-label="Close figure" onClick={() => setSelected(null)}><X size={20} /></button></div>
-          <FigureVisual figure={selected} expanded />
-          <p>{selected.caption}</p>
-        </div>
-      </div>}
-    </FigureLightboxContext.Provider>
   );
 }
 
@@ -782,12 +594,10 @@ export default function App() {
   }, []);
 
   return (
-    <FigureLightboxProvider>
+    <>
       <Header />
       <Hero />
-      <TaxonomySection />
       <PageIndex />
-      <TeaserSection />
       <CompanionMethod />
       <CompanionComponents />
       <CompanionAnnotation />
@@ -796,6 +606,6 @@ export default function App() {
       <CitationSection />
       <CtaSection />
       <Footer />
-    </FigureLightboxProvider>
+    </>
   );
 }

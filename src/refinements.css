@@ -4,7 +4,7 @@ html { scroll-padding-top: 88px; }
 .page-index__intro { display: flex; align-items: baseline; gap: 25px; margin-bottom: 20px; }
 .page-index__intro h2 { margin: 0; color: #24423e; font-family: var(--serif); font-size: clamp(28px, 2.6vw, 36px); font-weight: 550; }
 .page-index__intro p { max-width: 430px; margin: 0 0 0 auto; color: #63746f; font-size: 14px; line-height: 1.55; }
-.page-index__links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.page-index__links { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 .page-index__links a { position: relative; min-height: 154px; padding: 18px 17px; border: 1px solid #dcd8ce; border-radius: 12px; background: #fffdf8; color: #294740; transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
 .page-index__links a:hover, .page-index__links a:focus-visible { border-color: #9bbcb1; box-shadow: 0 10px 30px rgba(32, 67, 57, .10); transform: translateY(-2px); }
 .page-index__links a > span { display: block; margin-bottom: 13px; color: #8a776b; font-size: 10px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
