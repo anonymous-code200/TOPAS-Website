@@ -6,18 +6,13 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
-  BookOpenText,
-  BrainCircuit,
   ChevronRight,
-  Database,
   FileText,
   Menu,
-  Network,
-  Route,
   ShieldCheck,
   X,
 } from "lucide-react";
-import { CompanionAnnotation, CompanionComponents, CompanionMethod, CompanionSimulations } from "./Companion";
+import { CompanionAnnotation, CompanionComponents, CompanionOverview, CompanionSimulations } from "./Companion";
 
 type DomainKey = "cbt" | "p4g";
 
@@ -41,19 +36,6 @@ const navigationLinks = [
   ["Results", "#results"],
 ] as const;
 
-// The phase cards and their interactive examples belong to the same chapters.
-const navigationTargets = [
-  ["overview", "#overview"],
-  ["method", "#extraction"],
-  ["extraction", "#extraction"],
-  ["annotation", "#annotation"],
-  ["rl", "#rl"],
-  ["components", "#extraction"],
-  ["explorer", "#annotation"],
-  ["sessions", "#rl"],
-  ["results", "#results"],
-] as const;
-
 function Header() {
   const [open, setOpen] = useState(false);
   const [activeHref, setActiveHref] = useState<string>("#overview");
@@ -62,24 +44,13 @@ function Header() {
     let frame = 0;
     const updateActiveSection = () => {
       const readingLine = (document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 72) + 24;
-      let nearestTop = -Infinity;
-      let currentHrefs: string[] = ["#overview"];
-      for (const [id, href] of navigationTargets) {
-        const section = document.getElementById(id);
+      let currentHref: string = "#overview";
+      for (const [, href] of navigationLinks) {
+        const section = document.getElementById(href.slice(1));
         if (!section) continue;
-        const top = section.getBoundingClientRect().top;
-        if (top > readingLine) continue;
-        if (top > nearestTop + 1) {
-          nearestTop = top;
-          currentHrefs = [href];
-        } else if (Math.abs(top - nearestTop) <= 1) {
-          currentHrefs.push(href);
-        }
+        if (section.getBoundingClientRect().top <= readingLine) currentHref = href;
       }
-      // On desktop the three phase cards share a row: retain the selected link.
-      setActiveHref((previous) => currentHrefs.includes(window.location.hash)
-        ? window.location.hash
-        : currentHrefs.includes(previous) ? previous : currentHrefs[0]);
+      setActiveHref(currentHref);
     };
     const scheduleUpdate = () => {
       cancelAnimationFrame(frame);
@@ -109,12 +80,13 @@ function Header() {
       <button
         className="nav-toggle"
         aria-expanded={open}
+        aria-controls="primary-navigation"
         aria-label="Toggle navigation"
         onClick={() => setOpen((value) => !value)}
       >
         {open ? <X size={21} /> : <Menu size={21} />}
       </button>
-      <nav className={open ? "site-nav site-nav--open" : "site-nav"} aria-label="Primary navigation">
+      <nav id="primary-navigation" className={open ? "site-nav site-nav--open" : "site-nav"} aria-label="Primary navigation">
         {navigationLinks.map(([label, href]) => (
           <a
             key={href}
@@ -134,100 +106,29 @@ function Header() {
   );
 }
 
-const blueprintContent = {
-  planner: {
-    kicker: "Hierarchical planner",
-    title: "Plans in a structured decision space",
-    text: "An option policy selects a long-term strategy, an intra-option policy chooses the next primitive action, and a termination function decides when to move on.",
-  },
-  memory: {
-    kicker: "Graph memory",
-    title: "Retrieves context across the conversation",
-    text: "An extracted ontology organizes persistent user facts and dialogue evidence. The retriever selects relevant graph triples for the current decision.",
-  },
-  simulator: {
-    kicker: "User simulator",
-    title: "Keeps evaluation grounded in a profile",
-    text: "A structured user state and profile constrain simulated responses, enabling long-horizon evaluation across diverse, consistent users.",
-  },
-};
-
-type BlueprintKey = keyof typeof blueprintContent;
-
-function Blueprint() {
-  const [active, setActive] = useState<BlueprintKey>("planner");
-  const item = blueprintContent[active];
-
-  return (
-    <div className="blueprint" aria-label="Interactive TOPAS system blueprint">
-      <div className="blueprint-head">
-        <span>System blueprint</span>
-      </div>
-      <div className="blueprint-stage">
-        <div className="source-stack">
-          <div className="source-card"><BookOpenText size={18} /><span>Instructional<br />textbooks</span></div>
-          <div className="source-card"><Database size={18} /><span>Unlabeled<br />dialogues</span></div>
-        </div>
-        <div className="flow-arrow" aria-hidden="true"><ArrowRight /></div>
-        <div className="topas-core">
-          <Mark />
-          <strong>TOPAS</strong>
-          <span>compile</span>
-        </div>
-        <div className="flow-arrow" aria-hidden="true"><ArrowRight /></div>
-        <div className="module-stack">
-          <button className={active === "planner" ? "module-card active" : "module-card"} onClick={() => setActive("planner")}>
-            <Route size={19} /><span>Planner</span><small>state · action · reward</small>
-          </button>
-          <button className={active === "memory" ? "module-card active" : "module-card"} onClick={() => setActive("memory")}>
-            <Network size={19} /><span>Memory</span><small>graph · retrieval</small>
-          </button>
-          <button className={active === "simulator" ? "module-card active" : "module-card"} onClick={() => setActive("simulator")}>
-            <BrainCircuit size={19} /><span>Simulator</span><small>profile · user state</small>
-          </button>
-        </div>
-      </div>
-      <div className="blueprint-detail" key={active}>
-        <span>{item.kicker}</span>
-        <strong>{item.title}</strong>
-        <p>{item.text}</p>
-      </div>
-    </div>
-  );
-}
-
 function Hero() {
   return (
-    <main id="top">
-      <section className="hero" id="overview">
-        <div className="hero-glow hero-glow--one" />
-        <div className="hero-glow hero-glow--two" />
-        <div className="hero-inner">
-          <div className="hero-copy">
-            <div className="eyebrow"><span /> ICLR 2027 submission · Project page</div>
-            <h1>From textbooks to <em>proactive</em> agentic systems.</h1>
-            <p className="hero-lede">
-              TOPAS automatically turns instructional domain knowledge into a hierarchical planner,
-              graph-structured memory, and user simulator—then learns proactive dialogue policies from real interactions.
-            </p>
-            <div className="hero-actions">
-              <a className="button button--coral" href="#explorer">
-                Explore an annotated session <ArrowDown size={17} />
-              </a>
-              <a className="button button--ghost-light" href={paperHref} target="_blank" rel="noreferrer">
-                <FileText size={17} /> Read the paper
-              </a>
-            </div>
-            <div className="hero-meta" aria-label="Headline paper results">
-              <div><strong>+23.5%</strong><span>CBT average SSR</span></div>
-              <div><strong>+15.5%</strong><span>P4G average SSR</span></div>
-              <div><strong>99.7%</strong><span>fewer trainable parameters</span></div>
-            </div>
-          </div>
-          <Blueprint />
+    <section className="research-hero" id="overview">
+      <div className="section-shell section-shell--wide">
+        <div className="eyebrow">ICLR 2027 submission · Anonymous authors</div>
+        <h1 className="paper-title">From Textbooks to Proactive Agentic Systems
+          <span>Scaling Long-Horizon Planning via Automated Agentic System Construction</span>
+        </h1>
+        <p className="research-lede">TOPAS turns instructional domain knowledge into a hierarchical planner,
+          graph-structured memory, and a user simulator, then learns proactive dialogue policies from real interactions.</p>
+        <div className="research-actions">
+          <a className="button research-button--primary" href={paperHref} target="_blank" rel="noreferrer">Read the paper <ArrowUpRight size={15} /></a>
+          <a className="button research-button" href={artifactHref} target="_blank" rel="noreferrer">Code &amp; artifacts <ArrowUpRight size={15} /></a>
+          <a className="button research-button" href="#annotation">Explore a session <ArrowDown size={15} /></a>
         </div>
-      </section>
-    </main>
+        <CompanionOverview />
+        <nav className="phase-strip" aria-label="Method phases">
+          <a href="#extraction"><span>01</span> Textbooks → structured components</a>
+          <a href="#annotation"><span>02</span> Dialogues → annotated trajectories</a>
+          <a href="#rl"><span>03</span> Trajectories → proactive policies</a>
+        </nav>
+      </div>
+    </section>
   );
 }
 
@@ -238,27 +139,6 @@ function SectionIntro({ label, title, text }: { label: string; title: string; te
       <h2>{title}</h2>
       <p>{text}</p>
     </div>
-  );
-}
-
-const pageChapters = [
-  { number: "01", title: "Overview", description: "See the complete system at a glance.", href: "#overview", detail: "System" },
-  { number: "02", title: "Extraction", description: "Build a domain prior from textbooks.", href: "#extraction", detail: "Phase one" },
-  { number: "03", title: "Annotation", description: "Turn dialogues into training trajectories.", href: "#annotation", detail: "Phase two" },
-  { number: "04", title: "Offline RL", description: "Learn the hierarchical planner.", href: "#rl", detail: "Phase three" },
-  { number: "05", title: "Results", description: "Explore the reported findings.", href: "#results", detail: "Evaluation" },
-];
-
-function PageIndex() {
-  return (
-    <nav className="page-index section-shell section-shell--wide" id="contents" aria-label="On this page">
-      <div className="page-index__intro"><span className="mini-label">On this page</span><h2>Explore the paper.</h2></div>
-      <div className="page-index__links">
-        {pageChapters.map((chapter) => <a href={chapter.href} key={chapter.href}>
-          <span>{chapter.number} · {chapter.detail}</span><strong>{chapter.title}</strong><p>{chapter.description}</p><ArrowRight size={16} aria-hidden="true" />
-        </a>)}
-      </div>
-    </nav>
   );
 }
 
@@ -462,7 +342,7 @@ function SimulatorResults() {
       </div>
       <div className="scaled-chart scaled-chart--simulator" role="group" aria-label="Simulator ratings chart, y axis from 0 to 5">
         <ChartYAxis max={5} ticks={ticks} />
-        <div className="metric-grid">
+        <div className="simulator-chart-scroll"><div className="metric-grid">
           <ChartGridlines max={5} ticks={ticks} />
           {simulatorScores.map((row, rowIndex) => (
           <div className={`metric-group ${row.metric === "Overall" ? "metric-group--overall" : ""}`} key={row.metric}>
@@ -476,7 +356,7 @@ function SimulatorResults() {
             </div>
           </div>
           ))}
-        </div>
+        </div></div>
       </div>
       <div className="result-table-wrap result-table-wrap--compact">
         <table className="result-table simulator-result-table">
@@ -552,9 +432,9 @@ function ResultsSection() {
     <section className="section results-section" id="results">
       <div className="section-shell section-shell--wide">
         <SectionIntro
-          label="05 · Results"
-          title="Better long-horizon control. A much smaller trainable policy."
-          text="The evaluation follows the full system: extracted structure, dialogue annotations, simulator fidelity, and learned policies. Compare planner, simulator, and ablation results below."
+          label="04 · Results"
+          title="Examine the evidence."
+          text="Compare planner performance, simulator fidelity, and ablations using the reported experimental settings. Each chart retains the domain-specific scale and simulator/judge comparisons."
         />
         <div className="result-highlights" data-reveal>
           <article><span>CBT improvement</span><strong>+23.5%</strong><p>Average SSR over the strongest baseline</p></article>
@@ -602,18 +482,13 @@ function CitationSection() {
   );
 }
 
-function CtaSection() {
+function ResourcesSection() {
   return (
-    <section className="cta-section">
-      <div className="cta-shell" data-reveal>
-        <div className="cta-mark"><Mark /></div>
-        <span className="mini-label">Read the full work</span>
-        <h2>From Textbooks to Proactive Agentic Systems</h2>
-        <p>Scaling long-horizon planning via automated agentic system construction.</p>
-        <div className="cta-actions">
-          <a className="button button--coral" href={paperHref} target="_blank" rel="noreferrer"><FileText size={17} /> Open paper</a>
-          <a className="button button--ghost-light" href={artifactHref} target="_blank" rel="noreferrer">Code <ArrowUpRight size={17} /></a>
-        </div>
+    <section className="research-resources section-shell section-shell--wide" aria-label="Research resources">
+      <div><span className="mini-label">Research resources</span><p>Paper · Code &amp; artifacts · Citation</p></div>
+      <div className="research-actions">
+        <a className="button research-button" href={paperHref} target="_blank" rel="noreferrer"><FileText size={15} /> Paper <ArrowUpRight size={15} /></a>
+        <a className="button research-button" href={artifactHref} target="_blank" rel="noreferrer">Code &amp; artifacts <ArrowUpRight size={15} /></a>
       </div>
     </section>
   );
@@ -659,15 +534,15 @@ export default function App() {
   return (
     <>
       <Header />
-      <Hero />
-      <PageIndex />
-      <CompanionMethod />
-      <CompanionComponents />
-      <CompanionAnnotation />
-      <CompanionSimulations />
-      <ResultsSection />
-      <CitationSection />
-      <CtaSection />
+      <main id="top">
+        <Hero />
+        <CompanionComponents />
+        <CompanionAnnotation />
+        <CompanionSimulations />
+        <ResultsSection />
+        <ResourcesSection />
+        <CitationSection />
+      </main>
       <Footer />
     </>
   );

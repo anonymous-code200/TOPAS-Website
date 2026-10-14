@@ -2,6 +2,9 @@
 
 A static companion website for *From Textbooks to Proactive Agentic Systems*.
 
+`main` contains the research companion layout. The `previous-layout` branch
+preserves the earlier website, including its published files under `docs/`.
+
 ## Develop locally
 
 ```sh
