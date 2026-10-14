@@ -8,7 +8,8 @@
 .companion-heading p { margin: 0; color: #516760; font-size: 16px; line-height: 1.7; }
 .companion-source-note { display: block; margin-top: 10px; color: #78897e; font-size: 12px; line-height: 1.5; }
 .companion-overview { display: block; width: min(100%, 1060px); margin: 0 auto 32px; padding: 18px; border: 1px solid #dbded5; border-radius: 15px; background: #fffdf8; box-shadow: 0 15px 35px rgba(36, 61, 53, .055); cursor: zoom-in; }
-.companion-overview img { display: block; width: 100%; max-height: 440px; object-fit: contain; }
+/* Reserve the SVG's space so section links stay aligned while it loads. */
+.companion-overview img { display: block; width: 100%; aspect-ratio: 399.985 / 146.454; max-height: 440px; object-fit: contain; }
 .companion-method-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .companion-method-grid article { display: flex; flex-direction: column; min-height: 240px; padding: 24px; border: 1px solid #d9dfd5; border-radius: 14px; background: #fffdf8; }
 .companion-step-number { color: #cc7157; font-size: 12px; font-weight: 800; letter-spacing: .1em; }
