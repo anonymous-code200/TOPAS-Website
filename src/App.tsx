@@ -33,15 +33,72 @@ function Mark() {
   );
 }
 
+const navigationLinks = [
+  ["Overview", "#overview"],
+  ["Extraction", "#extraction"],
+  ["Annotation", "#annotation"],
+  ["Offline RL", "#rl"],
+  ["Results", "#results"],
+] as const;
+
+// The phase cards and their interactive examples belong to the same chapters.
+const navigationTargets = [
+  ["overview", "#overview"],
+  ["method", "#extraction"],
+  ["extraction", "#extraction"],
+  ["annotation", "#annotation"],
+  ["rl", "#rl"],
+  ["components", "#extraction"],
+  ["explorer", "#annotation"],
+  ["sessions", "#rl"],
+  ["results", "#results"],
+] as const;
+
 function Header() {
   const [open, setOpen] = useState(false);
-  const links = [
-    ["Overview", "#overview"],
-    ["Extraction", "#extraction"],
-    ["Annotation", "#annotation"],
-    ["Offline RL", "#rl"],
-    ["Results", "#results"],
-  ];
+  const [activeHref, setActiveHref] = useState<string>("#overview");
+
+  useEffect(() => {
+    let frame = 0;
+    const updateActiveSection = () => {
+      const readingLine = (document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 72) + 24;
+      let nearestTop = -Infinity;
+      let currentHrefs: string[] = ["#overview"];
+      for (const [id, href] of navigationTargets) {
+        const section = document.getElementById(id);
+        if (!section) continue;
+        const top = section.getBoundingClientRect().top;
+        if (top > readingLine) continue;
+        if (top > nearestTop + 1) {
+          nearestTop = top;
+          currentHrefs = [href];
+        } else if (Math.abs(top - nearestTop) <= 1) {
+          currentHrefs.push(href);
+        }
+      }
+      // On desktop the three phase cards share a row: retain the selected link.
+      setActiveHref((previous) => currentHrefs.includes(window.location.hash)
+        ? window.location.hash
+        : currentHrefs.includes(previous) ? previous : currentHrefs[0]);
+    };
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updateActiveSection);
+    };
+    const observer = new ResizeObserver(scheduleUpdate);
+    observer.observe(document.body);
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("hashchange", scheduleUpdate);
+    updateActiveSection();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("hashchange", scheduleUpdate);
+    };
+  }, []);
 
   return (
     <header className="site-header">
@@ -58,8 +115,14 @@ function Header() {
         {open ? <X size={21} /> : <Menu size={21} />}
       </button>
       <nav className={open ? "site-nav site-nav--open" : "site-nav"} aria-label="Primary navigation">
-        {links.map(([label, href]) => (
-          <a key={href} href={href} onClick={() => setOpen(false)}>
+        {navigationLinks.map(([label, href]) => (
+          <a
+            key={href}
+            href={href}
+            className={activeHref === href ? "nav-link--active" : undefined}
+            aria-current={activeHref === href ? "location" : undefined}
+            onClick={() => { setActiveHref(href); setOpen(false); }}
+          >
             {label}
           </a>
         ))}
@@ -189,7 +252,7 @@ const pageChapters = [
 function PageIndex() {
   return (
     <nav className="page-index section-shell section-shell--wide" id="contents" aria-label="On this page">
-      <div className="page-index__intro"><span className="mini-label">On this page</span><h2>Explore the paper.</h2><p>Follow the overview, three phases, and results.</p></div>
+      <div className="page-index__intro"><span className="mini-label">On this page</span><h2>Explore the paper.</h2></div>
       <div className="page-index__links">
         {pageChapters.map((chapter) => <a href={chapter.href} key={chapter.href}>
           <span>{chapter.number} · {chapter.detail}</span><strong>{chapter.title}</strong><p>{chapter.description}</p><ArrowRight size={16} aria-hidden="true" />
